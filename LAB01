@@ -1,0 +1,122 @@
+#include <SimpleTimer.h>
+SimpleTimer timer;
+#define S0  0
+#define S1  1 
+#define S2  2
+#define OFF LOW
+#define ON HIGH
+
+
+void nextState();
+void pressed();
+void stateOutput();
+//핀 설정
+const int trigPin = 10;
+const int echoPin = 7;
+const int ledPin = 13;
+const int pwmPin = 11;
+const int btnPin = 3;
+const long interval = 1000;
+
+long curtime;
+long pretime;
+long duration;
+long distance;
+int state = S0;
+int ledState = 0;
+int pwmState = 0;
+int pwmOut = 0;
+int ledOut = LOW;
+int input[2] = {0, 0};
+
+//State table definition
+typedef struct {
+  unsigned int next[2][2]; // nextstate = FSM[state].next[inputX][inputY] X에 의해서만 구분가능
+  unsigned int vel[2][2]; // velocity = FSM[state].vel[inputX][inputY]
+  unsigned int led[2][2]; // led = FSM[state].led[inputX][inputY]
+} State_t;
+
+State_t FSM[3] = {
+{{{S0,S0}, {S1,S1}},{{0,0},{0,50}},{{OFF,OFF},{ON,ON}}},
+{{{S1, S1},{S2, S2}},{{0,50},{0,100}},{{ON,ON},{ON,ON}}},
+{{{S2, S2},{S0, S0}},{{0,100},{0,0}},{{ON,ON},{OFF,OFF}}},
+};
+
+
+void setup() {
+  Serial.begin(9600);  
+  pinMode(ledPin, OUTPUT);
+  pinMode(trigPin, OUTPUT);
+  pinMode(echoPin, INPUT);
+  pinMode(pwmPin, OUTPUT);
+  
+  pinMode(btnPin, INPUT_PULLUP);
+  attachInterrupt(digitalPinToInterrupt(btnPin), pressed, FALLING);
+}
+
+void loop() {
+  //Generate pwm signal on the trigger pin.
+  digitalWrite(trigPin, LOW);
+  delayMicroseconds(2);
+  digitalWrite(trigPin, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(trigPin, LOW);
+  delayMicroseconds(10);
+ 
+  //Distance is calculated using how much time it takes.
+  duration = pulseIn(echoPin, HIGH);
+  distance = (float)duration / 58.0;
+
+
+  //Calculate next state. then update State
+  nextState();
+  // Output State
+  stateOutput();
+
+  analogWrite(pwmPin, pwmOut); //pwm에 입력
+  digitalWrite(ledPin, ledOut); //ledState에 입력
+
+ 
+
+  Serial.print("input : ");
+  Serial.print(input[1]);
+  Serial.print(", state : ");
+  Serial.print(state);
+
+  Serial.print(", distance = ");
+  Serial.print(distance);
+  Serial.println(" [cm]");
+  delay(200);
+}
+
+void pressed(){
+  input[0] = 1;
+  nextState();
+  input[0] = 0;
+}
+
+void nextState(){
+
+    if(distance < 10)
+      input[1] = 1;
+    else 
+      input[1] = 0;
+    
+    state = FSM[state].next[input[0]][input[1]];
+
+
+}
+
+void stateOutput(){
+  curtime = millis();
+  pwmOut = FSM[state].vel[input[0]][input[1]];
+  if(state == 0)
+    ledOut = FSM[state].led[input[0]][input[1]];
+  else{
+    if(curtime-pretime>=interval){
+      pretime = curtime;
+      ledOut ^= ledOut;
+      digitalWrite(ledPin, ledOut);
+    }
+  }
+}
