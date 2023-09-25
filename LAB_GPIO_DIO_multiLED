@@ -1,0 +1,41 @@
+int main(void) { 
+	// Initialiization --------------------------------------------------------
+	setup();	
+	int rep = 1;
+	int delay = 0;
+	
+	
+	// Inifinite Loop ----------------------------------------------------------
+	while(1){
+		
+
+
+		if(GPIO_read(GPIOC, BUTTON_PIN) == 0) {
+			if((rep == 1)&&(delay > 100000)){
+				GPIO_write(GPIOA, LED_PIN_1, HIGH);
+				GPIO_write(GPIOB, LED_PIN_4, LOW);
+				rep++;
+				delay = 0;
+			}
+			else if((rep == 2)&&(delay > 100000)){
+				GPIO_write(GPIOA, LED_PIN_1, LOW);
+				GPIO_write(GPIOA, LED_PIN_2, HIGH);
+				rep++;
+				delay = 0;
+			}
+			else if((rep == 3)&&(delay > 100000)){
+				GPIO_write(GPIOA, LED_PIN_2, LOW);
+				GPIO_write(GPIOA, LED_PIN_3, HIGH); 
+				rep++;
+				delay = 0;
+			}
+			else if((rep == 4)&&(delay > 100000)){
+				GPIO_write(GPIOA, LED_PIN_3, LOW); 
+				GPIO_write(GPIOB, LED_PIN_4, HIGH);
+				rep = 1;
+				delay = 0;
+			}
+		}		
+				delay++;
+	}
+}
