@@ -2,6 +2,9 @@
 
 # LAB : EC Design Problem - Vertical Smart Farm
 
+
+![Vertical_Smart_Farm pdf](https://github.com/dduiddui/ROS-zetabot/assets/121938154/c97e5daf-7fd1-4626-87e0-d6e56573aeb3)
+
 ## Embedded Controller Lab Report
 
 ###### Date : 2023. 12. 19
